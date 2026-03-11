@@ -23,7 +23,7 @@ class MongoDbConnection{
           await mongoose.connect(config.mongodb_uri, {
             dbName:config.mongo.dbName
           });
-          this.connection = mongoose.connection;
+           this.connection = mongoose.connection;
            logger.info("Connected to MongoDB");
            this.connection.on("error", (err) => {
             logger.error("MongoDB connection error:", err);
