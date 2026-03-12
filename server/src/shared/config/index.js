@@ -1,14 +1,14 @@
 import dotenv from 'dotenv';
 
 dotenv.config();
-
+console.log("2222",process.env.MONGO_URI)
 const config = {
   //server
     nodeEnv: process.env.NODE_ENV || 'development',
     port :parseInt(process.env.PORT || "3000",10),
   //MongoDB
     mongo:{
-        uri: process.env.MONGO_URI || 'mongodb://localhost:27017/api-pulse',
+        mongouri: process.env.MONGO_URI || 'mongodb://localhost:27017/api-pulse',
         dbName: process.env.MONGO_DB_NAME || 'api-pulse',
     },
   //postgres
@@ -16,7 +16,7 @@ const config = {
         host: process.env.PG_HOST || 'localhost',
         port: parseInt(process.env.PG_PORT || "5432",10),
         user: process.env.PG_USER || 'postgres',
-        password: process.env.PG_PASSWORD || 'password',
+        password: process.env.PG_PASSWORD || 'postgres',
         database: process.env.PG_DATABASE || 'api_pulse',   
     },
     rabbitmq: {

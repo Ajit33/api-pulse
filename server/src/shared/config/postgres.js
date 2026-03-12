@@ -31,7 +31,7 @@ class PostgresConnection {
                 idleTimeoutMillis: 30000,
                 connectionTimeoutMillis: 2000,
             })
-
+             
             this.pool.on("error", err => {
                 logger.error("Unexpected error on idle PG client", err)
             })

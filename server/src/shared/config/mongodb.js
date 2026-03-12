@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import config from './index.js';
 import logger from './logger.js';
-import logger from './logger.js';
 /**
  * MongoDbConnection class to manage MongoDB connections using Mongoose
  * Provides methods to connect and disconnect from the MongoDB database
@@ -20,7 +19,7 @@ class MongoDbConnection{
          logger.info("Already connected to MongoDB");
          return this.connection;
           }
-          await mongoose.connect(config.mongodb_uri, {
+          await mongoose.connect(config.mongo.mongouri, {
             dbName:config.mongo.dbName
           });
            this.connection = mongoose.connection;
