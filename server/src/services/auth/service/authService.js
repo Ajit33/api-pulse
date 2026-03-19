@@ -1,7 +1,8 @@
 import config from "../../../shared/config/index.js";
 import AppError from "../../../shared/utils/AppError.js";
 import jwt from "jsonwebtoken";
-import logger from "../../../shared/config/logger.js"
+import logger from "../../../shared/config/logger.js";
+import bcrypt from "bcryptjs";
 export class AuthService {
   constructor(userRepository) {
     if (!userRepository) {
@@ -27,6 +28,9 @@ export class AuthService {
     delete UserObj.password;
     return UserObj
   }
+    async comparePassword(userEnteredPassword, hashedPassword) {
+        return await bcrypt.compare(userEnteredPassword, hashedPassword)
+    }
   async onboardSuperAdmin(superAdminData) {
     try {
       const existingSuperAdmin = await this.userRepository.findAll();
@@ -45,4 +49,65 @@ export class AuthService {
         throw new Error(error);
     }
   }
+  /**
+     * Registers a new user.
+     * @param {Object} userData - The data of the user to be registered.
+     * @returns {Promise<Object>} - Returns an object containing the user and token.
+     */
+    async register(userData) {
+        try {
+            const existingUser = await this.userRepository.findByUsername(userData.username)
+            if (existingUser) {
+                throw new AppError("Username already exists", 409)
+            };
+
+            const existingEmail = await this.userRepository.findByEmail(userData.email)
+            if (existingEmail) {
+                throw new AppError("Email already exists", 409)
+            };
+
+            const user = await this.userRepository.create(userData);
+            const token = this.generateToken(user);
+
+            logger.info("User registered successfully", {
+                username: user.username
+            })
+
+            return {
+                user: this.formatUserForResposne(user),
+                token
+            }
+        } catch (error) {
+            logger.error("Error in Register service", error)
+            throw error
+        }
+    };
+
+    async login(logindata){
+      try {
+        const {username,password}=logindata;
+        const user= await this.userRepository.findByUsername(username);
+        if(!user){
+          throw new AppError("Invliad Credentials", 401);
+        }
+        if(!user.isActive){
+          throw new AppError("Account is deactivated", 403);
+        }
+        const isPasswordValid=await this.comparePassword(password,user.password);
+           if (!isPasswordValid) {
+                throw new AppError("Invliad Credentials", 401);
+            }
+            const token = this.generateToken(user);
+
+            logger.info("User loggedIn successfully", { username: user.username })
+
+            return {
+                user: this.formatUserForResposne(user),
+                token
+            }
+      } catch (error) {
+            logger.error("Error in Login service", error)
+            throw error
+        }
+    }
 }
