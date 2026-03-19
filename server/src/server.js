@@ -12,6 +12,7 @@ import rabbitMq from "./shared/config/rabbitMq.js"
 import mongo from "./shared/config/mongodb.js"
 import config from "./shared/config/index.js"
 import authRouter from "./services/auth/route/authRouter.js"
+import clientRouter from "./services/client/route/clientRoutes.js"
 const app=express();
 //middilewares
 app.use(helmet());
@@ -55,6 +56,7 @@ app.get("/",(req,res)=>{
   * Routers
   */
   app.use("/api/auth", authRouter);
+  app.use("/api",clientRouter);
 /**
  * 404 handler
  */

@@ -3,6 +3,7 @@ import AppError from "../../../shared/utils/AppError.js";
 import jwt from "jsonwebtoken";
 import logger from "../../../shared/config/logger.js";
 import bcrypt from "bcryptjs";
+import { APPLICATION_ROLES } from "../../../shared/constants/role.js";
 export class AuthService {
   constructor(userRepository) {
     if (!userRepository) {
@@ -13,7 +14,7 @@ export class AuthService {
   generateToken(user) {
     const{ _id, email, username, role, clientId } = user;
     const payload={
-        userid:_id,
+        userId:_id,
         username,
         email,
         role,
@@ -109,5 +110,35 @@ export class AuthService {
             logger.error("Error in Login service", error)
             throw error
         }
+    }
+    /**
+     * Fetches the profile of a user by their ID.
+     * @param {string} userId - The ID of the user.
+     * @returns {Promise<Object>} - Returns the user's profile data.
+     */
+    async getProfile(userId) {
+        try {
+            const user = await this.userRepository.findById(userId);
+            if (!user) {
+                throw new AppError('User not found', 404);
+            }
+            return this.formatUserForResponse(user)
+        } catch (error) {
+            logger.error('Error getting user profile:', error);
+            throw error;
+        }
+    };
+
+    async checkSuperAdminPermissions(userId){
+      try {
+        const user=await this.userRepository.findById(userId);
+        if(!user){
+          throw new AppError("User not found",404)
+        }
+        return user.role===APPLICATION_ROLES.SUPER_ADMIN;
+      } catch (error) {
+        logger.info("Error in checkSuperAdminPermissions :",error);
+        throw error;
+      }
     }
 }
