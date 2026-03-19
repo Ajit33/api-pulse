@@ -1,4 +1,4 @@
-import express, { urlencoded } from "express"
+import express from "express"
 import cors from "cors"
 import helmet from "helmet"
 import cookieParser from "cookie-parser"
@@ -6,14 +6,15 @@ import logger from "./shared/config/logger.js"
 
 
 import ResponseFormatter from "./shared/utils/responseFormatter.js"
-import errorHandler from "./middlewares/errorHandler.js"
+import errorHandler from "./shared/middlewares/errorHandler.js"
 import postgres from "./shared/config/postgres.js"
 import rabbitMq from "./shared/config/rabbitMq.js"
 import mongo from "./shared/config/mongodb.js"
-import { config } from "dotenv"
+import config from "./shared/config/index.js"
+import authRouter from "./services/auth/route/authRouter.js"
 const app=express();
 //middilewares
-app.use(helmet);
+app.use(helmet());
 app.use(cors({origin:true , Credential:true}));
 app.use(cookieParser());
 app.use(express.urlencoded({extended:true}));
@@ -37,7 +38,7 @@ app.get("/health",(req,res)=>{
     )
 })
 
-app.use("/",(req,res)=>{
+app.get("/",(req,res)=>{
     res.status(200).json(
         ResponseFormatter.success({
            service:"Api Plulse Moniter System",
@@ -50,7 +51,10 @@ app.use("/",(req,res)=>{
     )
     )
 })
-
+ /**
+  * Routers
+  */
+  app.use("/api/auth", authRouter);
 /**
  * 404 handler
  */

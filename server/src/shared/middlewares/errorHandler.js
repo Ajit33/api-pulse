@@ -1,6 +1,6 @@
 
-import logger from "../shared/config/logger.js";
-import ResponseFormatter from "../shared/utils/responseFormatter.js";
+import logger from "../config/logger.js";
+import ResponseFormatter from "../utils/responseFormatter.js";
 
 
 // Agent
