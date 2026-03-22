@@ -11,6 +11,9 @@ router.use(autheticate);
 router.post("/admin/clients/onboard",(req,res,next)=>{
     clientController.createClient(req,res,next)
 })
+router.post("/admin/clients/:clientId/users",(req,res,next)=>{
+    clientController.createClientUser(req,res,next)
+})
 
 
 export default router
