@@ -4,6 +4,9 @@ import {
 } from "../../../shared/constants/role.js";
 import logger from "../../../shared/config/logger.js";
 import AppError from "../../../shared/utils/AppError.js";
+import crypto from "crypto";
+import { v4 as uudiv4 } from "uuid";
+
 /**
  * ClientService class to handle business logic related to clients
  * This class is responsible for creating clients, managing client users, and handling API keys for clients. It interacts with the client repository, API key repository, and user repository to perform these operations.
@@ -96,19 +99,6 @@ export class ClientService {
     return user.clientId && user.clientId.toString() === clientId.toString();
   }
 
-  /**
-   * Check if a user has access to a specific client
-   * @param {Object} user - The user object
-   * @param {String} clientId - The client ID
-   * @returns {Boolean} - True if the user has access, false otherwise
-   */
-  canUserAccessClient(user, clientId) {
-    if (user.role === APPLICATION_ROLES.SUPER_ADMIN) {
-      return true;
-    }
-
-    return user.clientId && user.clientId.toString() === clientId.toString();
-  }
 
   /**
    * Create a new client user for a specific client
@@ -119,6 +109,11 @@ export class ClientService {
    */
   async createClientUser(clientId, userData, adminUser) {
     try {
+         const client = await this.clientRepository.FindByClientId(clientId);
+
+      if (!client) {
+        throw new AppError("Client not found", 404);
+      }
       if (!this.canUserAccessClient(adminUser, clientId)) {
         throw new AppError("Access denied", 403);
       }
@@ -134,11 +129,7 @@ export class ClientService {
         throw new AppError("Invalid role for client user", 400);
       }
 
-      const client = await this.clientRepository.FindByClientId(clientId);
-
-      if (!client) {
-        throw new AppError("Client not found", 404);
-      }
+     
 
       // Set permissions based on role
       let permissions = {
@@ -189,4 +180,65 @@ export class ClientService {
     const randomBytes = crypto.randomBytes(20).toString("hex");
     return `${prefix}_${randomBytes}`;
   }
+
+  async createApiKey(clientId, KeyData, adminUser){
+    console.log("555",adminUser)
+    try {
+            const client = await this.clientRepository.FindByClientId(clientId);
+
+            if (!client) {
+                throw new AppError("Client not found", 404)
+            };
+
+            if (!this.canUserAccessClient(adminUser, clientId)) {
+                throw new AppError("Access denied", 403)
+            };
+
+            if (!(adminUser.role === APPLICATION_ROLES.SUPER_ADMIN || adminUser.role === APPLICATION_ROLES.CLIENT_ADMIN)) {
+                throw new AppError("Access denied - Only Super Admin and Client Admin can create API keys", 403)
+            };
+
+
+            const { name, description, environment = "production" } = KeyData;
+
+            const keyId = uudiv4();
+            const keyValue = this.generateApiKey();
+
+            const apiKey = await this.apiKeyRepository.create({
+                keyId,
+                keyValue,
+                clientId,
+                name,
+                description,
+                environment,
+                createdBy: adminUser.userId
+            });
+
+            return apiKey;
+        } catch (error) {
+            logger.error("Error creating API key", error)
+            throw error;
+        }
+  }
+  async getClientApiKeys(clientId, user) {
+        try {
+            if (!this.canUserAccessClient(user, clientId)) {
+                throw new AppError('Access denied to this client', 403);
+            };
+
+            const apiKeys = await this.apiKeyRepository.findByClientId(clientId);
+
+            const formattedResponse = apiKeys.map(key => {
+                const keyObj = key.toObject ? key.toObject() : key;
+                delete keyObj.keyValue;
+                return keyObj
+            })
+
+            return formattedResponse
+
+        } catch (error) {
+            logger.error('Error getting client API keys:', error);
+            throw error;
+        }
+    };
 }

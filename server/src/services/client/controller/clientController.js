@@ -28,4 +28,22 @@ export class ClientController{
             next(error)
           }
     }
+    async createApiKey(req,res,next){
+        try {
+            const {clientId}=req.params;
+            const user= await this.clientService.createApiKey(clientId,req.body,req.user);
+            return res.status(201).json(ResponseFormatter.success(user,"Api-key created Sucessfully",201));
+        } catch (error) {
+            next(error)
+        }
+    }
+    async getClientApiKeys(req, res, next) {
+        try {
+            const { clientId } = req.params;
+            const apiKey = await this.clientService.getClientApiKeys(clientId, req.user)
+            return res.status(200).json(ResponseFormatter.success(apiKey, "API key fetched successfully", 200))
+        } catch (error) {
+            next(error)
+        }
+    }
 }

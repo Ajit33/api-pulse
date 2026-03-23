@@ -1,5 +1,6 @@
 import BaseApiKeyRepository from "./BaseApiKeyRepository.js";
-import ApiKey from "../../../shared/models/apikey.js"
+import ApiKey from "../../../shared/models/apikey.js";
+import logger from "../../../shared/config/logger.js";
 class MongoApiKeyRepository extends BaseApiKeyRepository{
     constructor(){
         super(ApiKey)
