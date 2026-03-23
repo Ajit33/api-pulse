@@ -21,9 +21,9 @@ export class ClientController{
     }
     async createClientUser(req,res,next){
           try {
-            const {userId}=req.params;
-            const user= await this.clientService.createClientUser(userId,req.body,req.user);
-            return res.status(201).json(user,ResponseFormatter.success("Client User created Sucessfully",201));
+            const {clientId}=req.params;
+            const user= await this.clientService.createClientUser(clientId,req.body,req.user);
+            return res.status(201).json(ResponseFormatter.success(user,"Client User created Sucessfully",201));
           } catch (error) {
             next(error)
           }

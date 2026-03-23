@@ -24,7 +24,7 @@ services:
         image: mongo:6.0
         container_name: api-pulse-mongodb
         ports:
-            - "27017:27017"
+            - "27018:27017"
         volumes:
             - mongo_data:/data/db
         networks:

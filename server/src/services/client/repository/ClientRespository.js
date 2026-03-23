@@ -22,9 +22,8 @@ class MongoClientRepository extends BaseClientRepository {
   }
   async FindByClientId(clientId){
     try {
-        const client= await this.model(clientId) ;
+      const client= await this.model.findById(clientId) ;
       logger.info('Client details from MongoDB', client);
-
         return client
         } catch (error) {
             logger.error('Error finding client in db by id', error);
