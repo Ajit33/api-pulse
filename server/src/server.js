@@ -8,11 +8,12 @@ import logger from "./shared/config/logger.js"
 import ResponseFormatter from "./shared/utils/responseFormatter.js"
 import errorHandler from "./shared/middlewares/errorHandler.js"
 import postgres from "./shared/config/postgres.js"
-import rabbitMq from "./shared/config/rabbitMq.js"
+import rabbitMq from "./shared/config/rabbitmq.js"
 import mongo from "./shared/config/mongodb.js"
 import config from "./shared/config/index.js"
 import authRouter from "./services/auth/route/authRouter.js"
 import clientRouter from "./services/client/route/clientRoutes.js"
+import ingestRouter from "./services/ingest/route/ingestRoutes.js"
 const app=express();
 //middilewares
 app.use(helmet());
@@ -57,6 +58,7 @@ app.get("/",(req,res)=>{
   */
   app.use("/api/auth", authRouter);
   app.use("/api",clientRouter);
+  app.use("/api/hit",ingestRouter);
 /**
  * 404 handler
  */
