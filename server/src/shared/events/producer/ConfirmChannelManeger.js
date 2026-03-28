@@ -1,17 +1,19 @@
 import { EventEmitter } from "node:events";
 
 export class ConfirmChannelManager extends EventEmitter {
-    constructor(rabbitmq, logger) {
-        super();
+   constructor({ rabbitmq, logger }) {
+    super();
 
-        if (!rabbitmq) throw new Error("ConfirmChannelManager requires a RabbitMQ connection manager");
-
-        this.rabbitmq = rabbitmq;
-        this.logger = logger ?? console;
-        this._channel = null;
-        this.connecting = false;
-        this._connectWaiters = [];
+    if (!rabbitmq) {
+        throw new Error("ConfirmChannelManager requires a RabbitMQ connection manager");
     }
+
+    this.rabbitmq = rabbitmq;
+    this.logger = logger ?? console;
+    this._channel = null;
+    this.connecting = false;
+    this._connectWaiters = [];
+}
 
     async getChannel() {
         if (this._channel) return this._channel;

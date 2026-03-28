@@ -1,4 +1,4 @@
-import { EVENT_TYPES } from "../EventContracts";
+import { EVENT_TYPES } from "../EventContracts.js";
 
 export class EventProducer {
     /**
@@ -10,7 +10,7 @@ export class EventProducer {
      * @param {object} [logger=console] - Logger instance with info/error methods.
      * @throws {Error} If any required dependency is missing.
      */
-    constructor(channelManager, circuitBreaker, retryStrategy, queueName, logger) {
+    constructor({ channelManager, circuitBreaker, retryStrategy, queueName, logger }){
         if (!channelManager) {
             throw new Error("EventProducer requires channelManager");
         }
@@ -78,7 +78,7 @@ export class EventProducer {
 
         return new Promise((resolve, reject) => {
             const written = channel.publish(
-                " ",
+                "",
                 this._queueName,
                 buffer,
                 publishOptions,

@@ -1,9 +1,12 @@
 
 import express from "express";
 import rateLimit from "express-rate-limit";
-import config from "../../../shared/config";
-import { IngestController } from "../controller/ingestController";
-import validateApiKey from "../../../shared/middlewares/validateApikey";
+
+
+import validateApiKey from "../../../shared/middlewares/validateApikey.js";
+import config from "../../../shared/config/index.js";
+import ingestContainer from "../Dependencies/dependencies.js"
+const { ingestController } = ingestContainer;
 
 const router=express.Router();
 
@@ -19,7 +22,12 @@ const ingestLimiter=rateLimit({
     legacyHeaders:true
 })
 
-router.post("/",ingestLimiter,validateApiKey,(req,res,next)=>IngestController.ingestHit(req,res,next));
+router.post(
+  "/",
+  ingestLimiter,
+  validateApiKey,
+  (req, res, next) => ingestController.ingestHit(req, res, next)
+);
 
 
 

@@ -4,101 +4,75 @@ export const CircuitState=Object.freeze({
     HALF_OPEN:'HALF_OPEN'
 })
 
-export class cricuitBreaker{
-    constructor(opt={}){
-        this.FailureThershold=opt.FailureThershold ?? 5;
-        this.CooldownMs=opt.CooldownMs ?? 30_000;
-        this.HalfOpenMaxAttempts=opt.HalfOpenMaxAttempts ?? 3
-        this.logger=opt.logger ?? console
+export class CircuitBreaker {
+    constructor({ failureThreshold = 5, cooldownMs = 10000, halfOpenMaxAttempts = 2, logger }) {
+        this.failureThreshold = failureThreshold;
+        this.cooldownMs = cooldownMs;
+        this.halfOpenMaxAttempts = halfOpenMaxAttempts;
+        this.logger = logger ?? console;
 
-        this.State=CircuitState.CLOSE;
-        this.Failures=0;
-        this.LastFailureTime=0;
-        this.HalfOpenAttempts=0;
-        this.HalfOpenSucesses=0
-    }
-    cooldownElapsed(){
-        return Date.now - this.LastFailureTime >= this.CooldownMs;
+        this._state = "CLOSED";   // CLOSED | OPEN | HALF_OPEN
+        this._failures = 0;
+        this._lastFailureTime = null;
+        this._halfOpenAttempts = 0;
     }
 
-    _transitionTo(newState){
-      const prev=this.State;
-      this.State=newState
-      if(newState===CircuitState.HALF_OPEN){
-         this.HalfOpenAttempts=0;
-         this.HalfOpenSucesses=0;
-         this.logger.info(`{cricuitBreaker} ${prev} => HALF_OPEN`)
-      }
-    }
-    _openCircuit(){
-        this.LastFailureTime=Date.now();
-        this._transitionTo(CircuitState.OPEN);
-        this.logger.info(`[CircuitBreaker] Open`,{
-            Failure:this.Failures,
-            CooldowmMs: this.CooldownMs
-        })
-    }
-    _reset(){
-        this.State=CircuitState.OPEN;
-        this.Failures=0
-        this.HalfOpenSucesses=0;
-        this.HalfOpenAttempts=0;
-    }
-
-    get state(){
-        if(this.State===CircuitState.CLOSE && this.cooldownElapsed()){
-            this.state=CircuitState.HALF_OPEN;
-        }
-        return this.state;
-    }
-
-    allowRequest(){
-        const current=this.State;
-        if(current=== CircuitState.CLOSE){
-            return true;
-        }
-        if(current=== CircuitState.HALF_OPEN){
-            if(this.HalfOpenAttempts < this.HalfOpenMaxAttempts){
-                this.HalfOpenAttempts++;
+    allowRequest() {
+        if (this._state === "OPEN") {
+            if (this.cooldownElapsed()) {
+                this._state = "HALF_OPEN";
+                this._halfOpenAttempts = 0;
                 return true;
             }
             return false;
         }
-        return false;
-    }
-    onSucess(){
-        if(this.state===CircuitState.HALF_OPEN){
-            if(this.HalfOpenSucesses>this.HalfOpenMaxAttempts){
-                this._reset();
-                this.logger.info(`[CircuitBeaker] state reset to CLOSED after request success`)
-            }
-            return;
-        }
-            if(this.Failures>0){
-                this.Failures=0;
-            this.logger.info(`[CircuitBeaker] failure count reset after success`)
-            }
-    }
-    onFailure(){
-        if(this.state===CircuitState.HALF_OPEN){
-            this.logger(`[CircuitBreaker] half open failed reopening`);
-            this._openCircuit();
-            return;
-        }
-        this.Failures++;
-        this.LastFailureTime=Date.now();
 
-        if(this.Failures >= this.FailureThershold){
-            this._openCircuit();
+        if (this._state === "HALF_OPEN") {
+            return this._halfOpenAttempts < this.halfOpenMaxAttempts;
+        }
+
+        return true;
+    }
+
+    onSuccess() {
+        this._failures = 0;
+
+        if (this._state === "HALF_OPEN") {
+            this._state = "CLOSED";
         }
     }
-    snapshot(){
-        return{
-            state:this.state,
-            Failure:this.Failures,
-            LastFailureTime:this.LastFailureTime,
-            HalfOpenAttempts:this.HalfOpenAttempts,
-            HalfOpenSucess:this.HalfOpenSucesses
+
+    onFailure() {
+        this._failures++;
+        this._lastFailureTime = Date.now();
+
+        if (this._state === "HALF_OPEN") {
+            this._state = "OPEN";
+            return;
         }
+
+        if (this._failures >= this.failureThreshold) {
+            this._state = "OPEN";
+        }
+    }
+
+    cooldownElapsed() {
+        if (!this._lastFailureTime) return true;
+        return Date.now() - this._lastFailureTime > this.cooldownMs;
+    }
+
+    get state() {
+        // ❗ IMPORTANT: NEVER use this.state inside here
+        if (this._state === "OPEN" && this.cooldownElapsed()) {
+            this._state = "HALF_OPEN";
+        }
+        return this._state;
+    }
+
+    snapshot() {
+        return {
+            state: this._state,
+            failures: this._failures,
+        };
     }
 }

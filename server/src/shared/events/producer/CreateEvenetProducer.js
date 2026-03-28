@@ -38,7 +38,7 @@ export function createEventProducer(overrides = {}) {
         failureThreshold: 2,
         cooldownMs: 30_000,
         halfOpenMaxAttempts: 3,
-        logger: log,
+        logger: log
     });
 
     // The retry strategy will use an exponential backoff with jitter, and the parameters can be configured via the application's configuration file.
