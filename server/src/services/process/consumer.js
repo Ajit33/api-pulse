@@ -1,7 +1,7 @@
-import { error } from "winston";
+import {z} from "zod"
 import logger from "../../shared/config/logger";
 import { EVENT_TYPES } from "../../shared/events/EventContracts";
-import { RetryStrategy } from "../../shared/events/producer/RetryStrategy";
+import { RetryStrategy, isRetryable} from "../../shared/events/producer/RetryStrategy";
 
 const messageSchema = z.object({
   type: z.enum([EVENT_TYPES.API_HIT]),
@@ -171,7 +171,7 @@ class EventConsumer {
     let startTime = Date.now();
     let msgData = null;
     try {
-      msgData = _parseMessage(msg);
+      msgData = this._parseMessage(msg);
       //idempotency check
       if (this.processedIds.has(msgData.messageId)) {
         this.logger.warn(
@@ -197,7 +197,7 @@ class EventConsumer {
       this.poisonMessages.delete(msgData.type);
       this.logger.info("Message processed successfully", {
         messageId: msgData.messageId,
-        processingTime: Date.now() - satrtTime,
+        processingTime: Date.now() - startTime,
       });
     } catch (error) {
       await this._handleProcessingError(error, msg, msgData, startTime);
