@@ -65,15 +65,54 @@ services:
         restart: unless-stopped
         depends_on:
             - postgres
+
+    api-app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: api-pulse-app
+        environment:
+            NODE_ENV: production
+            PORT: 3002
+            MONGO_URI: mongodb://MongoDB:27017/api-pulse
+            MONGO_DB_NAME: api-pulse
+            PG_HOST: postgres
+            PG_PORT: 5432
+            PG_DATABASE: api_pulse
+            PG_USER: postgres
+            PG_PASSWORD: postgres
+            RABBITMQ_URL: amqp://guest:guest@RabbitMQ:5672/api-pulse
+            RABBITMQ_QUEUE: api_hits
+            JWT_SECRET: ${JWT_SECRET}
+            JWT_EXPIRES_IN: 24h
+            RATE_LIMIT_WINDOW_MS: 60000
+            RATE_LIMIT_MAX_REQUESTS: 100
+        ports:
+            - "3002:3002"
+        volumes:
+            - ./logs:/app/logs
+        networks:
+            - api-pulse-network
+        depends_on:
+            postgres:
+                condition: service_healthy
+            RabbitMQ:
+                condition: service_healthy
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+            interval: 30s
+            timeout: 10s
+            retries: 3  
 volumes:
-        postgres_data:
-                driver: local
-        mongo_data: 
-                driver: local
-        rabbitmq_data:
-                driver: local
-        pgadmin_data:
-                driver: local   
+  postgres_data:
+    driver: local
+  mongo_data: 
+    driver: local
+  rabbitmq_data:
+    driver: local
+  pgadmin_data:
+    driver: local   
 networks:
-        api-pulse-network:
-                driver: bridge    
+  api-pulse-network:
+    driver: bridge    
