@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 const config = {
+    reconnectionDelay: parseInt(process.env.RECONNECTION_DELAY || '5000', 10),
   //server
     nodeEnv: process.env.NODE_ENV || 'development',
     port :parseInt(process.env.PORT || "3000",10),
@@ -38,6 +39,12 @@ const config = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         expiresIn: 24 * 60 * 60 * 1000
+    },
+    consumer:{
+        prefetch: parseInt(process.env.CONSUMER_PREFETCH || '10', 10),
+    },
+    dbConnection:{
+        maxRetries: parseInt(process.env.DB_CONNECTION_MAX_RETRIES || '5', 10),
     }
 }
 export default config;
