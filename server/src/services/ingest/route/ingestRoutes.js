@@ -3,7 +3,7 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 
 
-import validateApiKey from "../../../shared/middlewares/validateApikey.js";
+import validateApiKey from '../../../shared/middlewares/validateApiKey.js'
 import config from "../../../shared/config/index.js";
 import ingestContainer from "../Dependencies/dependencies.js"
 const { ingestController } = ingestContainer;

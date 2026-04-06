@@ -1,5 +1,5 @@
 import { authController } from "../controller/authContoller.js";
-import { AuthService } from "../service/AuthService.js";
+import { AuthService } from "../service/authService.js";
 import MongoUserRepository  from "../repository/UserRepository.js"
 
 class Container{
