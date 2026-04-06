@@ -10,7 +10,25 @@ const RETRYABLE_PATTERNS = [
   'not available',
   'server connection closed'
 ];
+/**
+ * Determines if an error is retryable based on its message or code.
+ * @param {*} err - The error object to check.
+ * @returns {boolean} - True if the error is retryable, false otherwise.
+ */
+export function isRetryable(err) {
+    if (!err) {
+        return false;
+    }
 
+    const msg = (err.message || '').toLowerCase()
+    const code = (err.code || '').toUpperCase();
+
+    if (code === 'ENOTFOUND') return true;
+
+    return RETRYABLE_PATTERNS.some(
+        (p) => msg.includes(p.toLowerCase()) || code.includes(p.toUpperCase())
+    )
+}
 export class RetryStrategy {
   constructor(opts = {}) {
     this.maxRetries = opts.maxRetries ?? 3;
@@ -19,22 +37,7 @@ export class RetryStrategy {
     this.jitterFactor = opts.jitterFactor ?? 0.3;
   }
 
-  /**
-   * Determines if an error is retryable
-   */
-  isRetryable(err) {
-    if (!err) return false;
-
-    const message = (err.message || '').toLowerCase();
-    const code = (err.code || '').toUpperCase();
-
-    if (code === 'ENOTFOUND') return true;
-
-    return RETRYABLE_PATTERNS.some((pattern) =>
-      message.includes(pattern.toLowerCase()) ||
-      code.includes(pattern.toUpperCase())
-    );
-  }
+  
 
   /**
    * Checks whether we should retry based on attempt count

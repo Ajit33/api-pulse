@@ -1,13 +1,15 @@
-import { ApiHitRepository } from "../Repository/ApiHitRepository";
-import { MetricsRepository } from "../Repository/MetricsRepository";
-import { ProcesserService } from "../Service/ProcesserService";
-
+import ApiHit from "../../../shared/models/apihits.js";
+import { ApiHitRepository } from "../Repository/ApiHitRepository.js";
+import { MetricsRepository } from "../Repository/MetricsRepository.js";
+import { ProcesserService } from "../Service/ProcesserService.js";
+import logger from "../../../shared/config/logger.js";
+import postgres from "../../../shared/config/postgres.js";
 
 class Container {
     static init(){
         const repositories= {
-            apiHitRepository: new ApiHitRepository({model: ApiHitRepository, logger}),
-            metricsRepository: new MetricsRepository({logger, postgres})
+            ApiHitRepository: new ApiHitRepository({model:ApiHit , logger}),
+            MetricsRepository: new MetricsRepository({logger, postgres})
         };
       const services={
         processorService : new ProcesserService(repositories)

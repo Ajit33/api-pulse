@@ -1,12 +1,17 @@
-import {z} from "zod"
-import logger from "../../shared/config/logger";
-import { EVENT_TYPES } from "../../shared/events/EventContracts";
-import { RetryStrategy, isRetryable} from "../../shared/events/producer/RetryStrategy";
-
+import z from "zod";
+import logger from "../../shared/config/logger.js";
+import { EVENT_TYPES } from "../../shared/events/EventContracts.js";
+import { RetryStrategy, isRetryable} from "../../shared/events/producer/RetryStrategy.js";
+import { CircuitBreaker } from "../../shared/events/producer/CircuitBreaker.js";
+import config from "../../shared/config/index.js";
+import mongodb from "../../shared/config/mongodb.js";
+import postgres from "../../shared/config/postgres.js";
+import rabbitmq from "../../shared/config/rabbitmq.js";
+import processorContainer from "./Dependency/dependencies.js"
 const messageSchema = z.object({
   type: z.enum([EVENT_TYPES.API_HIT]),
-  data: z.record(z.String(), z.unknown()),
-  messageId: z.String().optional(),
+  data: z.record(z.string(), z.unknown()),
+  messageId: z.string().optional(),
   timeStamp: z.union([z.string(), z.number()]).optional(),
 });
 class EventConsumer {
@@ -62,7 +67,7 @@ class EventConsumer {
         `Started consuming from queue: ${this.config.rabbitmq.queue} with prefetch: ${prefetch}`,
       );
       this.isRunning = true;
-      await this._consume(
+      await this.channel.consume(
         this.config.rabbitmq.queue,
         async (msg) => {
           if (msg !== null) {
@@ -117,7 +122,7 @@ class EventConsumer {
           );
         }
         await new Promise((resolve) =>
-          setTimeout(resolve, this.retryStrategy.getDelay(attempt)),
+          setTimeout(resolve, this.retryStrategy.delay(attempt)),
         );
       }
     }
@@ -141,7 +146,7 @@ class EventConsumer {
           this._reconnect();
         }
       });
-      await this._consume(
+      await this.channel.consume(
         this.config.rabbitmq.queue,
         async (msg) => {
           if (msg !== null) {
@@ -171,7 +176,7 @@ class EventConsumer {
     let startTime = Date.now();
     let msgData = null;
     try {
-      msgData = this._parseMessage(msg);
+      msgData = await this._parseMessage(msg);
       //idempotency check
       if (this.processedIds.has(msgData.messageId)) {
         this.logger.warn(
@@ -207,7 +212,9 @@ class EventConsumer {
     try {
       const content = msg.content.toString();
       const messageData = JSON.parse(content);
+       console.log('RAW MESSAGE:', JSON.stringify(messageData));
       const parsed = messageSchema.safeParse(messageData);
+      console.log('PARSED DATA:', JSON.stringify(parsed.data));
       if (!parsed.success) {
         throw new Error(
           `Schema validation failed: ${parsed.error.issue.map((i) => i.message).join(",")}`,
@@ -226,6 +233,8 @@ class EventConsumer {
     }
   }
   async _processMessage(msgData) {
+    console.log('MSG TYPE:', msgData.type);
+    console.log('EVENT_TYPES.API_HIT:', EVENT_TYPES.API_HIT);
     switch (msgData.type) {
       case EVENT_TYPES.API_HIT:
         await this.processerService.processEvent(msgData.data);
@@ -329,15 +338,15 @@ class EventConsumer {
   }
 
 }
-const circuitBreaker = overrides.circuitBreaker ?? new CircuitBreaker({
+const circuitBreaker = new CircuitBreaker({
         failureThreshold: 2,
         cooldownMs: 30_000,
         halfOpenMaxAttempts: 3,
-        logger: log
+        logger
     });
 
     // The retry strategy will use an exponential backoff with jitter, and the parameters can be configured via the application's configuration file.
-    const retryStrategy = overrides.retryStrategy ?? new RetryStrategy({
+    const retryStrategy =  new RetryStrategy({
         maxRetries: config.rabbitmq.retryAttempts,
         baseDelayMs: config.rabbitmq.retryDelay,
         maxDelayMs: 5_000,
@@ -345,8 +354,8 @@ const circuitBreaker = overrides.circuitBreaker ?? new CircuitBreaker({
     });
 
     const consumer= new EventConsumer({
-        processerService:procssorConatiner.service.processorService,
-        rabbitMq,
+        processerService:processorContainer.services.processorService,
+        rabbitMQ: rabbitmq,
         mongodb,
         postgres,
         config,
@@ -356,7 +365,7 @@ const circuitBreaker = overrides.circuitBreaker ?? new CircuitBreaker({
     })
 
     async function startConsumerWithRetry(){
-        const startRetry=new RetryStrategy({maxRetries:5,basedelayMs:5000 ,maxDelayMs:30_000});
+        const startupRetry=new RetryStrategy({maxRetries:5,basedelayMs:5000 ,maxDelayMs:30_000});
         let attempt=0;
         while(startupRetry.shouldRetry(attempt) || attempt==0){
             try {

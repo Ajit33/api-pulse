@@ -1,4 +1,4 @@
-import { BaseRepository } from "./BaseRepository"
+import { BaseRepository } from "./BaseRepository.js"
 
 
 export class ApiHitRepository extends BaseRepository{
@@ -8,7 +8,7 @@ export class ApiHitRepository extends BaseRepository{
         this.model=model
     }
 
-    async save(eventData){
+    async saveApiHit(eventData){
         try {
             const doc = new this.model(eventData)
             await doc.save()
@@ -44,7 +44,7 @@ export class ApiHitRepository extends BaseRepository{
             throw error;
         }
     }
-    async deleteOldhits(cutoffDate){
+    async deleteOldApiHits(cutoffDate){
         try {
             const result = await this.model.deleteMany({timestamp:{$lt:cutoffDate}});
             this.logger.info("Old API hits deleted",{deletedCount:result.deletedCount})

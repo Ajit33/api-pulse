@@ -37,8 +37,8 @@ class PostgresConnection {
             })
 
             logger.info("PG Pool Created")
-            return this.pool;
         }
+        return this.pool;
     }
 
     /**

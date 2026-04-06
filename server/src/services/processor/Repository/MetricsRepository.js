@@ -1,4 +1,4 @@
-import { BaseRepository } from "./BaseRepository";
+import { BaseRepository } from "./BaseRepository.js";
 
 const MAX_LIMIT = 1000;
 const MAX_QUERY_TIMEOUT = 30000;

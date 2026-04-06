@@ -104,6 +104,33 @@ services:
             interval: 30s
             timeout: 10s
             retries: 3  
+    consumer:
+        build:
+            context: .
+            dockerfile: Dockerfile.consumer
+        container_name: api-pulse-consumer
+        environment:
+            NODE_ENV: production
+            MONGO_URI: mongodb://MongoDB:27017/api-pulse
+            MONGO_DB_NAME: api-pulse
+            PG_HOST: postgres
+            PG_PORT: 5432
+            PG_DATABASE: api_pulse
+            PG_USER: postgres
+            PG_PASSWORD: postgres
+            RABBITMQ_URL: amqp://guest:guest@RabbitMQ:5672/api-pulse
+            RABBITMQ_QUEUE: api_hits
+        networks:
+            - api-pulse-network
+        depends_on:
+            postgres:
+                condition: service_healthy
+            RabbitMQ:
+                condition: service_healthy
+            MongoDB:
+                condition: service_started
+        restart: unless-stopped
+
 volumes:
   postgres_data:
     driver: local
