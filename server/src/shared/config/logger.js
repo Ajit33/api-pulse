@@ -6,7 +6,7 @@ import config from "./index.js"
  * Provides logging!
  */
 const logger = winston.createLogger({
-    level: config.node_env === "production" ? 'info' : 'debug',
+    level: config.nodeEnv === "production" ? 'info' : 'debug',
     format: winston.format.combine(
         winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
         winston.format.errors({ stack: true }),
