@@ -59,9 +59,11 @@ export class AuthService {
    */
   async register(userData) {
     try {
+      console.log("Registering user with data:", userData);
       const existingUser = await this.userRepository.findByUsername(
         userData.username,
       );
+      console.log("Existing user check result:", existingUser);
       if (existingUser) {
         throw new AppError("Username already exists", 409);
       }
@@ -72,7 +74,7 @@ export class AuthService {
       if (existingEmail) {
         throw new AppError("Email already exists", 409);
       }
-
+      
       const user = await this.userRepository.create(userData);
       const token = this.generateToken(user);
 
@@ -131,7 +133,7 @@ export class AuthService {
       if (!user) {
         throw new AppError("User not found", 404);
       }
-      return this.formatUserForResponse(user);
+      return this.formatUserForResposne(user);
     } catch (error) {
       logger.error("Error getting user profile:", error);
       throw error;

@@ -14,6 +14,7 @@ import config from "./shared/config/index.js"
 import authRouter from "./services/auth/route/authRouter.js"
 import clientRouter from "./services/client/route/clientRoutes.js"
 import ingestRouter from "./services/ingest/route/ingestRoutes.js"
+import analyticsRouter from "./services/analytics/routes/analyticsRoutes.js"
 const app=express();
 //middilewares
 app.use(helmet());
@@ -59,6 +60,7 @@ app.get("/",(req,res)=>{
   app.use("/api/auth", authRouter);
   app.use("/api",clientRouter);
   app.use("/api/hit",ingestRouter);
+  app.use("/api/analytics",analyticsRouter);
 /**
  * 404 handler
  */
@@ -107,6 +109,7 @@ async function startServer() {
             logger.info(`Server started on port ${config.port}`);
             logger.info(`Environment: ${config.NODE_ENV}`);
             logger.info(`API available at: http://localhost:${config.port}`);
+            logger.info(`Health check endpoint: http://localhost:${config.port}/health`);
         });
 
 

@@ -8,8 +8,7 @@ export class AnalyticsService{
 
     async getOverallStats(clientId, options={}){
         try {
-            const{limit=10,startTime}=options;
-            const {startTime,endTime} = this.parsedTimeFilters({startTime});
+            const {startTime,endTime} = this.parsedTimeFilters(options);
             const stats= await this.metricsRepository.getOverallStats(
                 clientId,
                 startTime,
@@ -52,5 +51,48 @@ export class AnalyticsService{
             endTime=new Date(endTime);
         }
         return {startTime,endTime};
+    }
+
+    async getTopEndpoints (clientId, options={}){
+        const {limit=10 , startTime}=options;
+        try {
+            const parsedStartTime=startTime ? new Date(startTime) : null;
+            const endpoints= await this.metricsRepository.getTopEndpoints(clientId, limit, parsedStartTime);
+            return endpoints.map((endpoints)=>({
+                serviceName : endpoints.service_name,
+                endpoint : endpoints.endpoint,
+                method: endpoints.method,
+                totalHits: parseInt(endpoints.total_hits) || 0,
+                avgLatency: parseFloat(endpoints.avg_latency).toFixed(2) || 0,
+                errorHits: parseInt(endpoints.error_hits) || 0,
+                errorRate: parseFloat((parseInt(endpoints.error_hits) / parseInt(endpoints.total_hits) * 100).toFixed(2)) || 0
+            }))
+        } catch (error) {
+            logger.error(`Error getting top endpoints:`, error);
+            throw error;
+        }
+    }
+
+    async getTimeseries(clientId, filters={}){
+        try {
+            const {serviceName ,endpoint ,endTime,limit=100}=filters;
+            const {startTime:start_time,endTime:end_time}= this.parsedTimeFilters({startTime,endTime});
+            const metrics= await this.metricsRepository.getMetrics({clientId, serviceName, endpoint ,startTime: start_time, endTime: end_time, limit});
+            return metrics.map((metric)=>({
+                serviceName : metric.service_name,
+                endpoint: metric.endpoint,
+                method: metric.method,
+                totalHits: parseInt(metric.total_hits) || 0,
+                errorHits: parseInt(metric.error_hits) || 0,
+                avgLatency: parseFloat(metric.avg_latency).toFixed(2) || 0,
+                maxLatency: parseFloat(metric.max_latency).toFixed(2) || 0,
+                minLatency: parseFloat(metric.min_latency).toFixed(2) || 0,
+                timeBucket: metric.time_bucket
+            }))
+            
+        } catch (error) {
+            logger.error(`Error getting timeseries data:`, error);
+            throw error;
+        }
     }
 }
