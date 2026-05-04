@@ -1,5 +1,3 @@
-
-
 FROM node:18-alpine
 
 WORKDIR /app
@@ -11,6 +9,9 @@ RUN npm install --production
 COPY . .
 
 RUN mkdir -p logs
+
+# Add curl
+RUN apk add --no-cache curl
 
 EXPOSE 3002
 

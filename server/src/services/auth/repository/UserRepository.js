@@ -42,6 +42,7 @@ class MongoUserRepository extends BaseRepository{
      */
     async findByUsername(username) {
         try {
+            console.log("Finding user by username:", username);
             const user = await this.model.findOne({ username })
             return user
         } catch (error) {

@@ -110,4 +110,28 @@ export class AnalyticsController {
   isValidObjectId(id) {
     return typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id);
   }
+
+  async getDashboard(req,res,next){
+     try {
+        const {startTime,endTime} = req.query;
+        const clientId= req.user.clientId;
+        const isSuperAmin = await this.ensureCanViewAnalytics(req);
+        const finalClientId = await this.resolveFinalClinetId(req,isSuperAmin);
+        const timeRange = this.validateTimeRange(startTime,endTime);
+        const result= await Promise.allSettled([
+            this.analyticsService.getOverallStats(finalClientId,timeRange),
+            this.analyticsService.getTopEndpoints(finalClientId,{limit:5, startTime:timeRange.startTime}),
+            this.analyticsService.getTimeseries(finalClientId, { ...timeRange, limit: 24 })
+        ])
+        const [Stats, topEndpoints, RecentTimeseries] = result.map((p) => p.status === 'fulfilled' ? p.value : null);
+        const Dashboarad={
+                Stats,
+                topEndpoints,
+                RecentActivities: RecentTimeseries,
+        }
+        res.status(200).json(ResponseFormatter.success(Dashboarad, "Dashboard stats retrieved successfully", 200))
+     } catch (error) {
+        next(error)
+     }
+  }
 }

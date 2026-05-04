@@ -180,7 +180,8 @@ export class MetricsRepository extends BaseRepository {
         }
     }
 
-    async getOverallStats(clientId, startTime = null, endTime = null) {
+    async getOverallStats(clientId, { startTime = null, endTime = null } = {}) {
+        console.log("getOverallStats called with:", { clientId, startTime, endTime });
         try {
             let paramIndex = 2;
             const params = [clientId];
@@ -195,7 +196,7 @@ export class MetricsRepository extends BaseRepository {
                 FROM endpoint_metrics
                 WHERE client_id = $1
             `;
-
+        
             if (startTime) {
                 sql += ` AND time_bucket >= $${paramIndex++}`;
                 params.push(startTime);
@@ -204,7 +205,7 @@ export class MetricsRepository extends BaseRepository {
                 sql += ` AND time_bucket <= $${paramIndex++}`;
                 params.push(endTime);
             }
-
+            console.log("Executing SQL:", sql, "with params:", params);
             const result = await this._query(sql, params);
             this.logger.info("Overall stats retrieved successfully", { clientId, startTime, endTime });
             return result.rows[0];
