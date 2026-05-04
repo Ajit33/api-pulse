@@ -8,8 +8,7 @@ export class AnalyticsService{
 
     async getOverallStats(clientId, options={}){
         try {
-            const{limit=10,startTime}=options;
-            const {startTime,endTime} = this.parsedTimeFilters({startTime});
+            const {startTime,endTime} = this.parsedTimeFilters(options);
             const stats= await this.metricsRepository.getOverallStats(
                 clientId,
                 startTime,
